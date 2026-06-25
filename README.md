@@ -1,23 +1,25 @@
 # HTML Copy Selector
 
-웹 페이지에서 **우클릭한 요소의 HTML을 클립보드로 복사**하는 Chrome 확장 프로그램입니다.
-AI에게 화면 구조를 설명할 때 "이 부분이 어떻게 생겼냐면…" 하고 일일이 옮겨 적는 수고를 덜어줍니다.
+**English** | [한국어](README.ko.md)
 
-## 기능
+A Chrome extension that **copies the HTML of any right-clicked element** to your clipboard.
+It saves you from manually retyping "this part looks like…" when explaining a page's structure to an AI.
 
-요소 위에서 우클릭하면 **Copy HTML for AI ▸** 메뉴 아래에 세 가지 항목이 나타납니다.
+## Features
 
-| 메뉴 | 복사 내용 |
+Right-click an element to reveal three items under the **Copy HTML for AI ▸** menu.
+
+| Menu item | What it copies |
 | --- | --- |
-| **This element (cleaned up)** | `script`/`style` 제거, 긴 속성값 축약, 들여쓰기 정리 — AI에게 붙여넣기 좋음 |
-| **This element (raw outerHTML)** | 선택한 요소의 원본 `outerHTML` 전체 |
-| **Parent element (one level up)** | 안쪽 작은 요소가 잘못 잡혔을 때, 부모를 정리해서 복사 |
+| **This element (cleaned up)** | Strips `script`/`style`, shortens long attribute values, and pretty-prints — ideal for pasting into an AI |
+| **This element (raw outerHTML)** | The element's original `outerHTML`, untouched |
+| **Parent element (one level up)** | When an inner element got grabbed by mistake, copies its parent (cleaned up) |
 
-복사가 끝나면 **복사된 요소를 화면에 초록 테두리로 잠깐 표시**하고, 우측 하단 토스트로 무엇을 복사했는지 알려줍니다. 의도와 다른 요소가 잡혔다면 바로 알아챌 수 있어요.
+After copying, the captured element is briefly **outlined in green** on the page, and a toast in the bottom-right tells you what was copied — so you immediately notice if the wrong element was grabbed.
 
-### 메타데이터 헤더
+### Metadata header
 
-복사 결과 맨 위에는 AI가 화면을 이해하도록 돕는 영어 주석이 붙습니다.
+Each copy is prefixed with comments that help the AI understand the screen.
 
 ```html
 <!-- page: https://example.com/products -->
@@ -28,46 +30,46 @@ AI에게 화면 구조를 설명할 때 "이 부분이 어떻게 생겼냐면…
 <div class="card">…</div>
 ```
 
-| 항목 | 의미 |
+| Field | Meaning |
 | --- | --- |
-| **page** | 어떤 화면인지 (URL) |
-| **selector** | 같은 모양이 여러 개여도 *몇 번째*인지 특정 + `unique on page` 검증 |
-| **element** | 태그·role·접근성 이름·aria 상태·링크/입력값 등 "이게 무엇인지" |
-| **position** | 화면상 크기와 위치, **숨김/뷰포트 밖 여부** (안 보인다류 문제에 결정적) |
-| **region** | 가장 가까운 랜드마크(header/nav/main 등)와 그 영역 제목 |
+| **page** | Which screen this is (URL) |
+| **selector** | Pinpoints *which one* even when several look alike, plus a `unique on page` check |
+| **element** | Tag, role, accessible name, aria state, link/input value — "what this is" |
+| **position** | On-screen size and location, plus **hidden / off-viewport status** (decisive for "it's not showing up" issues) |
+| **region** | The nearest landmark (header/nav/main, etc.) and that region's title |
 
-### 선택자 생성 방식
+### How selectors are built
 
-DevTools의 "Copy selector"와 달리, **빌드마다 바뀌는 해시 클래스를 제외**해서 재현 가능한 선택자를 만듭니다.
+Unlike DevTools' "Copy selector", **hash classes that change on every build are excluded**, producing reproducible selectors.
 
-| 종류 | 예시 | 처리 |
+| Kind | Example | Handling |
 | --- | --- | --- |
-| 안정적인 id | `#newsstand` | 사용 (경로 종료) |
-| 안정적인 속성 | `data-testid`, `name`, `aria-label` | 우선 사용 |
-| 일반 클래스 | `.card`, `.news_desc` | 사용 |
-| CSS Modules / styled-components / emotion | `...module__x___AiQyW`, `sc-abc123`, `css-1a2b3c` | **제외** → `:nth-of-type`으로 대체 |
+| Stable id | `#newsstand` | Used (ends the path) |
+| Stable attribute | `data-testid`, `name`, `aria-label` | Preferred |
+| Plain class | `.card`, `.news_desc` | Used |
+| CSS Modules / styled-components / emotion | `...module__x___AiQyW`, `sc-abc123`, `css-1a2b3c` | **Excluded** → replaced with `:nth-of-type` |
 
-## 설치 (개발자 모드)
+## Installation (developer mode)
 
-1. Chrome에서 `chrome://extensions` 접속
-2. 우측 상단 **개발자 모드** 켜기
-3. **압축해제된 확장 프로그램을 로드** 클릭
-4. 이 폴더 선택
+1. Open `chrome://extensions` in Chrome
+2. Turn on **Developer mode** (top right)
+3. Click **Load unpacked**
+4. Select this folder
 
-## 사용법
+## Usage
 
-1. 아무 웹 페이지에서 설명하고 싶은 요소 위에 마우스를 올리고 **우클릭**
-2. **Copy HTML for AI ▸** 에서 원하는 항목 선택
-3. AI 채팅창에 붙여넣기
+1. Hover over the element you want to describe on any web page and **right-click**
+2. Pick an item from **Copy HTML for AI ▸**
+3. Paste into your AI chat
 
-## 파일 구조
+## File structure
 
-- `manifest.json` — 확장 설정 (Manifest V3, `contextMenus` 권한)
-- `background.js` — 우클릭 메뉴 등록 및 클릭 처리
-- `content.js` — 우클릭 요소 추적, HTML 추출/정리, 메타데이터 헤더 생성, 클립보드 복사, 하이라이트/토스트
+- `manifest.json` — Extension config (Manifest V3, `contextMenus` permission)
+- `background.js` — Registers the context menu and handles clicks
+- `content.js` — Tracks the right-clicked element, extracts/cleans HTML, builds the metadata header, copies to clipboard, and shows the highlight/toast
 
-## 참고
+## Notes
 
-- 화면에 보이는 토스트·메뉴와 복사되는 헤더는 모두 영어이며, 코드 주석만 한국어입니다.
-- iframe 안의 요소도 복사할 수 있도록 모든 프레임에서 동작합니다.
-- 간결 정리 모드에서 100자가 넘는 속성값(예: base64 이미지)은 `…`로 잘립니다.
+- On-screen toasts/menus and the copied header are all in English; only the code comments are in Korean.
+- Works across all frames, so elements inside iframes can be copied too.
+- In cleanup mode, attribute values longer than 100 characters (e.g. base64 images) are truncated with `…`.
