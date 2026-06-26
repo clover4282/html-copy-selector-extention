@@ -1,39 +1,72 @@
-// Build the right-click menu as submenus under "Copy HTML for AI".
+// A single right-click menu item that starts pick mode (same as the toolbar icon / shortcut).
 const ROOT_ID = "ai-copy-root";
-const MENU_ITEMS = [
-  { id: "copy-clean", title: "This element (cleaned up)" },
-  { id: "copy-outerhtml", title: "This element (raw outerHTML)" },
-  { id: "copy-parent-clean", title: "Parent element (one level up)" },
-];
 
-chrome.runtime.onInstalled.addListener(() => {
+// Look up the keyboard shortcut the user actually has assigned to pick mode (may differ from the
+// suggested default, or be empty if they cleared it). Passed to the content script and the tooltip
+// so the shortcut is always shown accurately.
+function getPickShortcut(cb) {
+  chrome.commands.getAll((cmds) => {
+    const cmd = (cmds || []).find((c) => c.name === "toggle-pick-mode");
+    cb(cmd && cmd.shortcut ? cmd.shortcut : "");
+  });
+}
+
+// Show the current shortcut in the toolbar icon's tooltip so users can discover it on hover.
+function refreshActionTitle() {
+  getPickShortcut((shortcut) => {
+    const suffix = shortcut ? ` (${shortcut})` : "";
+    chrome.action.setTitle({ title: `Pick an element to copy for AI${suffix}` });
+  });
+}
+
+function setupContextMenus() {
   chrome.contextMenus.removeAll(() => {
     chrome.contextMenus.create({
       id: ROOT_ID,
       title: "Copy HTML for AI",
       contexts: ["all"],
     });
-    for (const item of MENU_ITEMS) {
-      chrome.contextMenus.create({
-        id: item.id,
-        parentId: ROOT_ID,
-        title: item.title,
-        contexts: ["all"],
-      });
-    }
   });
+}
+
+chrome.runtime.onInstalled.addListener(() => {
+  setupContextMenus();
+  refreshActionTitle();
+});
+chrome.runtime.onStartup.addListener(refreshActionTitle);
+
+// Enter pick mode in the given tab, passing along the current shortcut so the toast can show it.
+function startPickMode(tabId) {
+  getPickShortcut((shortcut) => {
+    chrome.tabs.sendMessage(tabId, { type: "ENTER_PICK_MODE", shortcut }, () => {
+      // Read lastError in the callback to suppress the console warning (e.g. on chrome:// pages).
+      void chrome.runtime.lastError;
+    });
+  });
+}
+
+// Toolbar icon click → enter element-pick mode (like devtools "inspect").
+chrome.action.onClicked.addListener((tab) => {
+  if (!tab || tab.id == null) return;
+  startPickMode(tab.id);
 });
 
-// Menu click → forward a message to the content script in the frame where the right-click happened.
+// Keyboard shortcut → same as clicking the toolbar icon: toggle element-pick mode.
+chrome.commands.onCommand.addListener((command, tab) => {
+  if (command !== "toggle-pick-mode") return;
+  // `tab` is provided on recent Chrome; fall back to querying the active tab otherwise.
+  if (tab && tab.id != null) {
+    startPickMode(tab.id);
+  } else {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (tabs[0] && tabs[0].id != null) startPickMode(tabs[0].id);
+    });
+  }
+});
+
+// Right-click menu → start pick mode, just like the toolbar icon / shortcut.
 chrome.contextMenus.onClicked.addListener((info, tab) => {
+  if (info.menuItemId !== ROOT_ID) return;
   if (!tab || tab.id == null) return;
-  chrome.tabs.sendMessage(
-    tab.id,
-    { type: "COPY_ELEMENT", action: info.menuItemId },
-    { frameId: info.frameId ?? 0 },
-    () => {
-      // Read lastError in the sendMessage callback to suppress the console warning.
-      void chrome.runtime.lastError;
-    }
-  );
+  startPickMode(tab.id);
 });

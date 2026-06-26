@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Copy HTML for AI",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Right-click any element to copy its HTML to your clipboard, so you can easily explain a page to an AI.",
   "icons": {
     "16": "icons/icon16.png",
@@ -9,6 +9,18 @@
     "128": "icons/icon128.png"
   },
   "permissions": ["contextMenus"],
+  "action": {
+    "default_title": "Pick an element to copy for AI"
+  },
+  "commands": {
+    "toggle-pick-mode": {
+      "suggested_key": {
+        "default": "Alt+Shift+C",
+        "mac": "Alt+Shift+C"
+      },
+      "description": "Pick an element to copy for AI"
+    }
+  },
   "background": {
     "service_worker": "background.js"
   },

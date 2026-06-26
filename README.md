@@ -2,47 +2,64 @@
 
 **English** | [한국어](README.ko.md)
 
-A Chrome extension that **copies the HTML of any right-clicked element** to your clipboard.
-It saves you from manually retyping "this part looks like…" when explaining a page's structure to an AI.
+A Chrome extension that lets you **point at any element on a page and copy a compact "reference" about it** to your clipboard — then paste it to an AI (ChatGPT, Claude, …) and ask it to fix or explain that piece of UI.
+
+Instead of dumping raw HTML, it copies exactly what an AI needs to *locate and debug* the element: a unique selector, what the element is, its size in the viewport, and the **key computed CSS** behind how it looks.
 
 > **Chrome Web Store listing**
 >
-> _Right-click any element to copy its HTML to your clipboard, so you can easily explain a page to an AI._
+> _Point at any element and copy an AI-ready reference (selector + key CSS) to your clipboard, so you can ask an AI to fix or explain that part of the UI._
 >
-> Paste the copied HTML into ChatGPT, Claude, or any AI assistant to make requests like "fix this part" or "explain this layout" with precise context. No data is collected, stored, or transmitted — everything runs locally. See the [Privacy Policy](PRIVACY.md).
+> No data is collected, stored, or transmitted — everything runs locally. See the [Privacy Policy](PRIVACY.md).
 
-## Features
+## How it works
 
-Right-click an element to reveal three items under the **Copy HTML for AI ▸** menu.
+Start **pick mode** (a DevTools-like "Inspect") in any of three ways:
 
-| Menu item | What it copies |
-| --- | --- |
-| **This element (cleaned up)** | Strips `script`/`style`, shortens long attribute values, and pretty-prints — ideal for pasting into an AI |
-| **This element (raw outerHTML)** | The element's original `outerHTML`, untouched |
-| **Parent element (one level up)** | When an inner element got grabbed by mistake, copies its parent (cleaned up) |
+- Click the **toolbar icon**
+- Press the **shortcut** — default **Alt+Shift+C** (Mac: **Option+Shift+C**)
+- Right-click → **Copy HTML for AI**
 
-After copying, the captured element is briefly **outlined in green** on the page, and a toast in the bottom-right tells you what was copied — so you immediately notice if the wrong element was grabbed.
+Then:
 
-### Metadata header
+1. **Hover** — a blue outline and a label (tag + size) follow your cursor.
+2. **Click** the element — its reference is copied, the element flashes green, and a toast shows the full copied text.
+3. **Esc** (or the shortcut / icon again) cancels.
 
-Each copy is prefixed with comments that help the AI understand the screen.
+> The shortcut can be changed at `chrome://extensions/shortcuts`. The toolbar icon's tooltip shows the currently assigned key.
+
+## What gets copied
+
+A block of comments describing the element — **no HTML body**, just the reference an AI needs. Defaults, zero values, `static` positioning and transparent backgrounds are omitted, so only meaningful signal remains.
 
 ```html
+<!-- AI UI-debugging reference for the element below. -->
 <!-- page: https://example.com/products -->
 <!-- selector: #content > div.list > div.card:nth-of-type(3) (unique on page) -->
 <!-- element: a "Add to cart" → /cart/add?id=42 -->
-<!-- position: 320×40px · middle right of viewport -->
+<!-- class: card card--featured -->
+<!-- size: 320×40px · viewport 1440×900 desktop -->
+<!-- layout: display:flex; dir:row; justify:space-between; align:center; gap:8px -->
+<!-- box: padding:8px 12px; border:1px solid #ddd; radius:6px -->
+<!-- text: 14px/20px Inter; weight:600; color:#1a1a1a -->
+<!-- visual: background:#ffffff; box-shadow -->
 <!-- region: inside <main> "Recommended" -->
-<div class="card">…</div>
 ```
 
 | Field | Meaning |
 | --- | --- |
 | **page** | Which screen this is (URL) |
-| **selector** | Pinpoints *which one* even when several look alike, plus a `unique on page` check |
-| **element** | Tag, role, accessible name, aria state, link/input value — "what this is" |
-| **position** | On-screen size and location, plus **hidden / off-viewport status** (decisive for "it's not showing up" issues) |
+| **selector** | Pinpoints *which one* even when several look alike, plus a `unique on page` check. Never truncated. |
+| **element** | Tag, role, accessible name, aria state, link/input value — "what this is". Container elements skip the noisy concatenated text. |
+| **class** | Every class actually applied (the selector keeps only stable ones; debugging needs the full set) |
+| **size** | Rendered size in CSS px, plus the viewport size and form factor (desktop/mobile) so the size is meaningful |
+| **layout** | `display`, plus flex/grid alignment & `gap`, and `overflow` when set |
+| **box** | padding / margin / border / radius — only the non-zero parts |
+| **text** | font size/line-height/family, weight, color |
+| **visual** | background, opacity, shadow — only when set |
+| **positioning** | position / z-index / insets — only when not `static` |
 | **region** | The nearest landmark (header/nav/main, etc.) and that region's title |
+| **⚠ not visible / off-screen** | Shown **only** when the element is hidden or off-screen, with the concrete reason (`display:none`, etc.) |
 
 ### How selectors are built
 
@@ -70,21 +87,19 @@ Once published, install it directly from the Chrome Web Store. _(Link will be ad
 
 ## Usage
 
-1. Hover over the element you want to describe on any web page and **right-click**
-2. Pick an item from **Copy HTML for AI ▸**
-3. Paste into your AI chat
+Start pick mode (toolbar icon, **Alt+Shift+C**, or right-click → **Copy HTML for AI**), hover the element, click it, then paste into your AI chat.
 
 ## File structure
 
-- `manifest.json` — Extension config (Manifest V3, `contextMenus` permission)
-- `background.js` — Registers the context menu and handles clicks
-- `content.js` — Tracks the right-clicked element, extracts/cleans HTML, builds the metadata header, copies to clipboard, and shows the highlight/toast
+- `manifest.json` — Extension config (Manifest V3, `contextMenus` permission, toolbar `action`, pick-mode keyboard `command`)
+- `background.js` — Registers the single right-click menu item, handles the toolbar icon / shortcut / menu (all start pick mode), and keeps the icon tooltip's shortcut up to date
+- `content.js` — Runs pick mode (hover highlight + click to copy), builds the metadata/CSS reference, copies to clipboard, and shows the highlight/toast
 
 ## Notes
 
-- The entire package — UI text, copied header, and code comments — is in English.
+- The entire package — UI text, copied reference, and code comments — is in English.
 - Works across all frames, so elements inside iframes can be copied too.
-- In cleanup mode, attribute values longer than 100 characters (e.g. base64 images) are truncated with `…`.
+- Only meaningful CSS is included; defaults and zero values are dropped to keep the output short.
 
 ## Privacy
 
