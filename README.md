@@ -1,9 +1,15 @@
-# HTML Copy Selector
+# Copy HTML for AI
 
 **English** | [한국어](README.ko.md)
 
 A Chrome extension that **copies the HTML of any right-clicked element** to your clipboard.
 It saves you from manually retyping "this part looks like…" when explaining a page's structure to an AI.
+
+> **Chrome Web Store listing**
+>
+> _Right-click any element to copy its HTML to your clipboard, so you can easily explain a page to an AI._
+>
+> Paste the copied HTML into ChatGPT, Claude, or any AI assistant to make requests like "fix this part" or "explain this layout" with precise context. No data is collected, stored, or transmitted — everything runs locally. See the [Privacy Policy](PRIVACY.md).
 
 ## Features
 
@@ -49,7 +55,13 @@ Unlike DevTools' "Copy selector", **hash classes that change on every build are 
 | Plain class | `.card`, `.news_desc` | Used |
 | CSS Modules / styled-components / emotion | `...module__x___AiQyW`, `sc-abc123`, `css-1a2b3c` | **Excluded** → replaced with `:nth-of-type` |
 
-## Installation (developer mode)
+## Installation
+
+### From the Chrome Web Store
+
+Once published, install it directly from the Chrome Web Store. _(Link will be added here after review.)_
+
+### Developer mode (load unpacked)
 
 1. Open `chrome://extensions` in Chrome
 2. Turn on **Developer mode** (top right)
@@ -70,6 +82,10 @@ Unlike DevTools' "Copy selector", **hash classes that change on every build are 
 
 ## Notes
 
-- On-screen toasts/menus and the copied header are all in English; only the code comments are in Korean.
+- The entire package — UI text, copied header, and code comments — is in English.
 - Works across all frames, so elements inside iframes can be copied too.
 - In cleanup mode, attribute values longer than 100 characters (e.g. base64 images) are truncated with `…`.
+
+## Privacy
+
+This extension does not collect, store, or transmit any user data. All processing happens locally in your browser. See [PRIVACY.md](PRIVACY.md) for details.
