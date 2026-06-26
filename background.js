@@ -1,4 +1,4 @@
-// 우클릭 메뉴를 "AI용 HTML 복사" 하위의 서브메뉴로 구성한다.
+// Build the right-click menu as submenus under "Copy HTML for AI".
 const ROOT_ID = "ai-copy-root";
 const MENU_ITEMS = [
   { id: "copy-clean", title: "This element (cleaned up)" },
@@ -24,7 +24,7 @@ chrome.runtime.onInstalled.addListener(() => {
   });
 });
 
-// 메뉴 클릭 → 우클릭이 일어난 프레임의 content script로 메시지 전달.
+// Menu click → forward a message to the content script in the frame where the right-click happened.
 chrome.contextMenus.onClicked.addListener((info, tab) => {
   if (!tab || tab.id == null) return;
   chrome.tabs.sendMessage(
@@ -32,7 +32,7 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
     { type: "COPY_ELEMENT", action: info.menuItemId },
     { frameId: info.frameId ?? 0 },
     () => {
-      // sendMessage 콜백에서 lastError를 읽어 콘솔 경고를 막는다.
+      // Read lastError in the sendMessage callback to suppress the console warning.
       void chrome.runtime.lastError;
     }
   );

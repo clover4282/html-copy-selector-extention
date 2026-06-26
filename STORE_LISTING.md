@@ -14,7 +14,7 @@ Upload package: `html-copy-selector-v1.0.0.zip`
 
 ## Store Listing
 
-**Name**: HTML Copy Selector
+**Name**: Copy HTML for AI
 
 **Summary (short description, max 132 chars)**
 Right-click any element to copy its HTML to your clipboard, so you can easily explain a page to an AI.

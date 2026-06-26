@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "HTML Copy Selector",
+  "name": "Copy HTML for AI",
   "version": "1.0.0",
   "description": "Right-click any element to copy its HTML to your clipboard, so you can easily explain a page to an AI.",
   "icons": {

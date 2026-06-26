@@ -1,8 +1,8 @@
-# Privacy Policy — HTML Copy Selector
+# Privacy Policy — Copy HTML for AI
 
 _Last updated: June 26, 2026_
 
-HTML Copy Selector does **not** collect, store, or transmit any user data.
+Copy HTML for AI does **not** collect, store, or transmit any user data.
 
 ## What the extension does
 

@@ -1,5 +1,5 @@
-// 마지막으로 우클릭된 요소를 추적한다.
-// capture 단계에서 가장 깊은 target을 기록해 두었다가, 메뉴 클릭 시 사용한다.
+// Track the most recently right-clicked element.
+// Recorded during the capture phase (deepest target) and used when a menu item is clicked.
 let lastRightClicked = null;
 
 document.addEventListener(
@@ -10,7 +10,7 @@ document.addEventListener(
   true
 );
 
-// background.js에서 보낸 메뉴 클릭 메시지를 처리한다.
+// Handle the menu-click message sent from background.js.
 chrome.runtime.onMessage.addListener((message) => {
   if (!message || message.type !== "COPY_ELEMENT") return;
 
@@ -20,7 +20,7 @@ chrome.runtime.onMessage.addListener((message) => {
     return;
   }
 
-  // "부모 요소" 메뉴: 안쪽 작은 요소가 잘못 잡혔을 때 한 단계 위를 복사한다.
+  // "Parent element" menu: copy one level up when a small inner element was picked by mistake.
   if (message.action === "copy-parent-clean") {
     if (!target.parentElement || target.parentElement === document.documentElement) {
       showToast("No parent element to go up to.", false);
@@ -38,13 +38,13 @@ chrome.runtime.onMessage.addListener((message) => {
     return;
   }
 
-  // 페이지 URL·고유 선택자·요소 정보를 헤더로 붙여, AI가 "어느 페이지의 어떤 요소가
-  // 화면 어디에 어떻게 보이는지"까지 파악할 수 있게 한다.
+  // Prepend a header with the page URL, a unique selector, and element info so the AI can
+  // understand which element on which page it is, and where/how it appears on screen.
   const payload = buildHeader(target) + html;
 
   copyToClipboard(payload)
     .then(() => {
-      highlight(target); // 복사된 요소를 화면에 표시해 잘못 잡았는지 바로 확인하게 한다.
+      highlight(target); // Highlight the copied element so the user can immediately see if the wrong one was picked.
       showToast(`Copied · ${describe(target)} (${payload.length.toLocaleString()} chars)`, true);
     })
     .catch(() => {
@@ -53,7 +53,7 @@ chrome.runtime.onMessage.addListener((message) => {
 });
 
 // ---------------------------------------------------------------------------
-// HTML 정리: AI에게 설명하기 좋게 노이즈를 줄이고 들여쓰기로 정리한다.
+// HTML cleanup: reduce noise and re-indent so the result is easy to explain to an AI.
 // ---------------------------------------------------------------------------
 const VOID_ELEMENTS = new Set([
   "area", "base", "br", "col", "embed", "hr", "img", "input",
@@ -79,11 +79,11 @@ function walk(node, depth, lines) {
   if (node.nodeType !== Node.ELEMENT_NODE) return;
 
   const tag = node.tagName.toLowerCase();
-  if (NOISE_TAGS.has(tag)) return; // script/style 등은 통째로 생략
+  if (NOISE_TAGS.has(tag)) return; // skip script/style and similar tags entirely
 
   const attrs = formatAttrs(node);
 
-  // svg 등 내부 데이터가 큰 경우는 자식을 접어둔다.
+  // For tags with large inner data (e.g. svg), collapse the children.
   if (tag === "svg") {
     lines.push(`${pad}<svg${attrs}>…</svg>`);
     return;
@@ -107,7 +107,7 @@ function walk(node, depth, lines) {
     return;
   }
 
-  // 텍스트 하나만 있는 경우는 한 줄로 합친다.
+  // Collapse to a single line when there is only one text child.
   if (children.length === 1 && children[0].nodeType === Node.TEXT_NODE) {
     const text = children[0].textContent.replace(/\s+/g, " ").trim();
     lines.push(`${pad}<${tag}${attrs}>${text}</${tag}>`);
@@ -123,7 +123,7 @@ function formatAttrs(el) {
   const parts = [];
   for (const attr of el.attributes) {
     let value = attr.value;
-    // base64 / 매우 긴 값은 잘라낸다 (구조 파악에 불필요).
+    // Truncate base64 / very long values (not needed to understand structure).
     if (value.length > 100) value = value.slice(0, 97) + "…";
     parts.push(value === "" ? attr.name : `${attr.name}="${value}"`);
   }
@@ -131,7 +131,7 @@ function formatAttrs(el) {
 }
 
 // ---------------------------------------------------------------------------
-// 메타데이터 헤더: 페이지 URL + 고유 선택자 + 일치 개수
+// Metadata header: page URL + unique selector + match count
 // ---------------------------------------------------------------------------
 function buildHeader(el) {
   const selector = buildSelector(el);
@@ -139,7 +139,7 @@ function buildHeader(el) {
   try {
     count = document.querySelectorAll(selector).length;
   } catch (_) {
-    // 선택자가 유효하지 않은 드문 경우는 개수 확인을 건너뛴다.
+    // Skip the count check in the rare case the selector is invalid.
   }
   const match =
     count === 1 ? "unique on page"
@@ -160,13 +160,13 @@ function buildHeader(el) {
   return lines.join("\n") + "\n";
 }
 
-// 사람이 읽을 수 있게 짧게 자른다.
+// Trim to a short, human-readable length.
 function shorten(s, max) {
   s = (s || "").replace(/\s+/g, " ").trim();
   return s.length > max ? s.slice(0, max - 1) + "…" : s;
 }
 
-// 요소의 "정체": 태그 + role + 접근성 이름(+ 링크/입력 부가정보).
+// The element's "identity": tag + role + accessible name (+ link/input extras).
 function describeElement(el) {
   const tag = el.tagName.toLowerCase();
   let s = tag;
@@ -198,7 +198,7 @@ function describeElement(el) {
   return s;
 }
 
-// 탭/체크박스/아코디언 등의 현재 상태(선택됨·펼쳐짐 등)를 읽는다.
+// Read the current state (selected, expanded, etc.) of tabs/checkboxes/accordions and the like.
 function ariaStates(el) {
   const out = [];
   if (el.getAttribute("aria-selected") === "true") out.push("selected");
@@ -213,7 +213,7 @@ function ariaStates(el) {
   return out.join(", ");
 }
 
-// 요소의 화면상 위치/크기/표시 여부. "안 보인다"류 문제 파악에 쓰인다.
+// The element's on-screen position/size/visibility. Useful for diagnosing "it's not showing" issues.
 function describePosition(el) {
   const rect = el.getBoundingClientRect();
   const w = Math.round(rect.width);
@@ -236,9 +236,9 @@ function describePosition(el) {
   return `${w}×${h}px · ${where}`;
 }
 
-// 요소가 속한 시맨틱 영역(가장 가까운 랜드마크)과 그 영역의 대표 제목.
+// The semantic region the element belongs to (nearest landmark) and that region's representative heading.
 function describeRegion(el) {
-  // 자기 자신(role 등)이 잡히지 않도록 부모부터 위로 올라가며 찾는다.
+  // Search upward from the parent so the element itself (its role, etc.) is not matched.
   const start = el.parentElement || el;
   const landmark = start.closest(
     "header,nav,main,footer,aside,section,article,form,dialog,[role]"
@@ -254,34 +254,34 @@ function describeRegion(el) {
   return ht ? `inside <${s}> "${ht}"` : `inside <${s}>`;
 }
 
-// 빌드마다 바뀌는 해시 클래스/id 를 가려낸다.
-// 예) CSS Modules(foo-module__bar___AbC12), styled-components(sc-abc123),
-//     emotion(css-1a2b3c) 같은 자동 생성 식별자는 재현성이 없어 선택자에서 제외한다.
+// Detect hashed classes/ids that change on every build.
+// e.g. auto-generated identifiers like CSS Modules (foo-module__bar___AbC12),
+//     styled-components (sc-abc123), emotion (css-1a2b3c) are not reproducible, so exclude them from selectors.
 function isHashy(s) {
   if (/_{2,}[A-Za-z0-9_-]{4,}$/.test(s)) return true; // ...___AiQyW
   if (/-module__/.test(s)) return true;               // webpack CSS Modules
   if (/^sc-[A-Za-z0-9]{5,}$/.test(s)) return true;    // styled-components
   if (/^css-[a-z0-9]{5,}$/i.test(s)) return true;     // emotion
   if (/^[a-z0-9]*[0-9][a-z0-9]*$/i.test(s) && /[A-Z]/.test(s) && /[0-9]/.test(s) && s.length >= 6)
-    return true; // 대소문자+숫자가 섞인 무작위 해시
+    return true; // random hash mixing upper/lower case and digits
   return false;
 }
 
-// 이스케이프 없이 그대로 쓸 수 있는 "깨끗한" CSS 식별자인지 본다.
-// Tailwind 류(w-1/2, md:flex)처럼 / : . 등이 들어가면 CSS.escape 가 백슬래시를
-// 붙여 선택자가 .w-1\/2 처럼 지저분해지므로, 그런 클래스는 선택자에서 제외한다.
+// Check whether this is a "clean" CSS identifier usable as-is without escaping.
+// For Tailwind-style classes (w-1/2, md:flex) containing / : . etc., CSS.escape adds
+// backslashes and makes the selector ugly (e.g. .w-1\/2), so exclude such classes from selectors.
 function isSimpleIdent(s) {
   return /^-?[A-Za-z_][\w-]*$/.test(s);
 }
 
-// 안정적이고(해시 아님) 깨끗한(이스케이프 불필요) 클래스만 최대 2개까지 추린다.
+// Pick up to 2 classes that are stable (not hashed) and clean (no escaping needed).
 function stableClasses(node) {
   return Array.from(node.classList)
     .filter((c) => !isHashy(c) && isSimpleIdent(c))
     .slice(0, 2);
 }
 
-// 안정적인 식별 속성(테스트용 data-*, name, aria-label 등)을 선택자로 만든다.
+// Build a selector from stable identifying attributes (test-oriented data-*, name, aria-label, etc.).
 const STABLE_ATTRS = ["data-testid", "data-test", "data-cy", "data-qa", "name", "aria-label"];
 function stableAttrSelector(node) {
   for (const a of STABLE_ATTRS) {
@@ -291,16 +291,16 @@ function stableAttrSelector(node) {
   return "";
 }
 
-// 요소를 가리키는 고유 CSS 선택자를 만든다.
-// 우선순위: 안정적인 id → 안정적인 속성 → 의미 있는 클래스, 그리고 필요 시 :nth-of-type 으로 위치 고정.
+// Build a unique CSS selector that points to the element.
+// Priority: stable id → stable attribute → meaningful classes, then :nth-of-type to pin position when needed.
 function buildSelector(el) {
   const parts = [];
   let node = el;
   while (node && node.nodeType === Node.ELEMENT_NODE && node !== document.documentElement) {
     if (node.id && !isHashy(node.id) && !/["\\]/.test(node.id)) {
-      // 깨끗한 id는 #id, 특수문자가 섞이면 백슬래시 없는 [id="..."] 표기를 쓴다.
+      // Use #id for clean ids; for ids with special characters, use the backslash-free [id="..."] form.
       parts.unshift(isSimpleIdent(node.id) ? `#${node.id}` : `[id="${node.id}"]`);
-      break; // 안정적인 id는 페이지 내 유일하다고 보고 경로를 종료한다.
+      break; // A stable id is assumed unique on the page, so end the path here.
     }
 
     const tag = node.tagName.toLowerCase();
@@ -310,7 +310,7 @@ function buildSelector(el) {
       if (cls.length) part += "." + cls.join(".");
     }
 
-    // 같은 부모 안에서 위 선택자가 형제와 겹치면 위치 번호를 붙인다.
+    // If the selector above also matches siblings within the same parent, add a position index.
     const parent = node.parentElement;
     if (parent) {
       let twins;
@@ -330,7 +330,7 @@ function buildSelector(el) {
   return parts.join(" > ") || el.tagName.toLowerCase();
 }
 
-// 토스트에 표시할 간단한 요소 설명 (예: div.card#main)
+// A short element description for the toast (e.g. div.card#main).
 function describe(el) {
   let s = el.tagName.toLowerCase();
   if (el.id) s += `#${el.id}`;
@@ -339,14 +339,14 @@ function describe(el) {
 }
 
 // ---------------------------------------------------------------------------
-// 클립보드 복사 (navigator.clipboard 우선, 실패 시 execCommand fallback)
+// Copy to clipboard (prefer navigator.clipboard, fall back to execCommand on failure).
 // ---------------------------------------------------------------------------
 async function copyToClipboard(text) {
   try {
     await navigator.clipboard.writeText(text);
     return;
   } catch (_) {
-    // 일부 컨텍스트에서 막히면 execCommand로 대체한다.
+    // If blocked in some contexts, fall back to execCommand.
   }
   const ta = document.createElement("textarea");
   ta.value = text;
@@ -361,11 +361,11 @@ async function copyToClipboard(text) {
 }
 
 // ---------------------------------------------------------------------------
-// 복사된 요소를 화면에 잠깐 표시한다. (잘못 잡았는지 눈으로 바로 확인)
+// Briefly highlight the copied element on screen (so you can visually confirm the right one was picked).
 // ---------------------------------------------------------------------------
 function highlight(el) {
   const rect = el.getBoundingClientRect();
-  if (rect.width === 0 && rect.height === 0) return; // 보이지 않는 요소는 표시 생략
+  if (rect.width === 0 && rect.height === 0) return; // skip highlighting invisible elements
   const box = document.createElement("div");
   box.style.cssText = [
     "position:fixed",
@@ -387,7 +387,7 @@ function highlight(el) {
 }
 
 // ---------------------------------------------------------------------------
-// 화면 우측 하단 토스트 알림
+// Toast notification at the bottom-right of the screen.
 // ---------------------------------------------------------------------------
 let toastEl = null;
 let toastTimer = null;
