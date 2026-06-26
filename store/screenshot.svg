@@ -1,0 +1,62 @@
+<svg width="1280" height="800" viewBox="0 0 1280 800" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#eef2ff"/>
+      <stop offset="1" stop-color="#e0e7ff"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="18" stdDeviation="24" flood-color="#312e81" flood-opacity="0.20"/>
+    </filter>
+    <filter id="menush" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="10" stdDeviation="16" flood-color="#0f172a" flood-opacity="0.28"/>
+    </filter>
+  </defs>
+
+  <rect width="1280" height="800" fill="url(#bg)"/>
+
+  <!-- Headline -->
+  <text x="80" y="108" font-family="-apple-system, Segoe UI, Roboto, sans-serif" font-size="52" font-weight="800" fill="#1e1b4b">Copy any element's HTML for AI</text>
+  <text x="80" y="156" font-family="-apple-system, Segoe UI, Roboto, sans-serif" font-size="26" font-weight="500" fill="#4338ca">Right-click → paste into ChatGPT or Claude with perfect context</text>
+
+  <!-- Browser window -->
+  <g filter="url(#shadow)">
+    <rect x="80" y="210" width="1120" height="520" rx="16" fill="#ffffff"/>
+    <!-- title bar -->
+    <rect x="80" y="210" width="1120" height="48" rx="16" fill="#f1f5f9"/>
+    <rect x="80" y="240" width="1120" height="18" fill="#f1f5f9"/>
+    <circle cx="112" cy="234" r="7" fill="#ef4444"/>
+    <circle cx="136" cy="234" r="7" fill="#f59e0b"/>
+    <circle cx="160" cy="234" r="7" fill="#22c55e"/>
+    <rect x="200" y="222" width="620" height="24" rx="12" fill="#e2e8f0"/>
+    <text x="220" y="239" font-family="-apple-system, Segoe UI, sans-serif" font-size="14" fill="#64748b">example.com</text>
+
+    <!-- page content -->
+    <rect x="120" y="300" width="360" height="40" rx="6" fill="#1e293b"/>
+    <text x="138" y="327" font-family="-apple-system, Segoe UI, sans-serif" font-size="22" font-weight="700" fill="#ffffff">Pricing Card</text>
+
+    <!-- a highlighted card (the element being right-clicked) -->
+    <rect x="120" y="368" width="300" height="300" rx="12" fill="#faf5ff" stroke="#7c3aed" stroke-width="3" stroke-dasharray="9 7"/>
+    <text x="145" y="418" font-family="-apple-system, Segoe UI, sans-serif" font-size="20" font-weight="700" fill="#6d28d9">Pro Plan</text>
+    <text x="145" y="470" font-family="-apple-system, Segoe UI, sans-serif" font-size="40" font-weight="800" fill="#1e293b">$12<tspan font-size="18" font-weight="500" fill="#64748b">/mo</tspan></text>
+    <rect x="145" y="500" width="250" height="10" rx="5" fill="#e2e8f0"/>
+    <rect x="145" y="524" width="210" height="10" rx="5" fill="#e2e8f0"/>
+    <rect x="145" y="548" width="230" height="10" rx="5" fill="#e2e8f0"/>
+    <rect x="145" y="596" width="250" height="44" rx="8" fill="#7c3aed"/>
+    <text x="270" y="624" font-family="-apple-system, Segoe UI, sans-serif" font-size="17" font-weight="700" fill="#ffffff" text-anchor="middle">Choose Pro</text>
+
+    <!-- context menu -->
+    <g filter="url(#menush)">
+      <rect x="430" y="430" width="300" height="184" rx="12" fill="#ffffff"/>
+      <!-- root highlighted -->
+      <rect x="438" y="438" width="284" height="42" rx="8" fill="#eef2ff"/>
+      <image href="icons/icon128.png" x="450" y="446" width="26" height="26"/>
+      <text x="488" y="465" font-family="-apple-system, Segoe UI, sans-serif" font-size="17" font-weight="600" fill="#3730a3">Copy HTML for AI</text>
+      <text x="706" y="466" font-family="-apple-system, Segoe UI, sans-serif" font-size="18" fill="#94a3b8">›</text>
+
+      <line x1="438" y1="490" x2="722" y2="490" stroke="#f1f5f9" stroke-width="2"/>
+      <text x="460" y="520" font-family="-apple-system, Segoe UI, sans-serif" font-size="16" fill="#334155">This element (cleaned up)</text>
+      <text x="460" y="556" font-family="-apple-system, Segoe UI, sans-serif" font-size="16" fill="#334155">This element (raw outerHTML)</text>
+      <text x="460" y="592" font-family="-apple-system, Segoe UI, sans-serif" font-size="16" fill="#334155">Parent element (one level up)</text>
+    </g>
+  </g>
+</svg>
